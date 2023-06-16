@@ -1,4 +1,4 @@
-# AISeg3D: Segment Any Instance in 3D
+# OpenSAI3D: Segment Any Instance in 3D with Open Vocabularies
 
 - Authors: [Yingda Yin<sup>1</sup>](https://yd-yin.github.io/), [Yang Xiao<sup>2</sup>](https://youngxiao13.github.io/), [Jingwei Huang<sup>2</sup>](https://cs.stanford.edu/people/jingweih/), [He Wang<sup>1</sup>](https://hughw19.github.io/), [Baoquan Chen<sup>1</sup>](http://cfcs.pku.edu.cn/baoquan/)
 - Institutes: <sup>1</sup>Peking University, <sup>2</sup>Huawei Riemann Lab
@@ -17,14 +17,14 @@ Existing methods focused on distilling CLIP features into either point cloud or 
 
 ## Comparisons with related work
 
-| Method             | Representation | Foundation<br />model | Open-<br />vocabulary | Instance<br />Segmentation | Sparse<br />viewpoints | Training-<br />free |
-|--------------------|:--------------:|:---------------------:|:---------------------:|:--------------------------:|:----------------------:|:-------------------:|
-| **DFF [1]**        |      NeRF      |         CLIP          |        &check;        |          &cross;           |        &cross;         |       &cross;       |
-| **LERF [2]**       |      NeRF      |         CLIP          |        &check;        |          &cross;           |        &cross;         |       &cross;       |
-| **SA3D [3]**       |      NeRF      |          SAM          |        &check;        |          &check;           |        &cross;         |       &check;       |
-| **OpenScene [4]**  |  Point cloud   |         CLIP          |        &check;        |          &cross;           |        &check;         |       &cross;       |
-| **SAM3D [5]**      |  Point cloud   |          SAM          |        &check;        |         auto-mask          |        &cross;         |       &check;       |
-| **AISeg3D (Ours)** |  Point cloud   |     Grounded SAM      |        &check;        |          &check;           |        &check;         |       &check;       |
+| Method               | Representation | Foundation<br />model | Open-<br />vocabulary | Instance<br />Segmentation | Sparse<br />viewpoints | Training-<br />free |
+|----------------------|:--------------:|:---------------------:|:---------------------:|:--------------------------:|:----------------------:|:-------------------:|
+| **DFF [1]**          |      NeRF      |         CLIP          |        &check;        |          &cross;           |        &cross;         |       &cross;       |
+| **LERF [2]**         |      NeRF      |         CLIP          |        &check;        |          &cross;           |        &cross;         |       &cross;       |
+| **SA3D [3]**         |      NeRF      |          SAM          |        &check;        |          &check;           |        &cross;         |       &check;       |
+| **OpenScene [4]**    |  Point cloud   |         CLIP          |        &check;        |          &cross;           |        &check;         |       &cross;       |
+| **SAM3D [5]**        |  Point cloud   |          SAM          |        &check;        |         auto-mask          |        &cross;         |       &check;       |
+| **OpenSAI3D (Ours)** |  Point cloud   |     Grounded SAM      |        &check;        |          &check;           |        &check;         |       &check;       |
 
 
 1. Kobayashi et al. "Decomposing NeRF for Editing via Feature Field Distillation." NeurIPS 2022
@@ -45,8 +45,8 @@ Existing methods focused on distilling CLIP features into either point cloud or 
 ### Installation
 
 ```bash
-conda create -n aiseg python=3.8
-conda activate aiseg
+conda create -n opensai python=3.8
+conda activate opensai
 pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
 pip install open3d natsort
 ```
