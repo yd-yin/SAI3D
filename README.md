@@ -1,159 +1,201 @@
-# OpenSAI3D: Segment Any Instance in 3D with Open Vocabularies
+# SAI3D: Segment Any Instance in 3D with Open Vocabularies
 
-- Authors: [Yingda Yin<sup>1</sup>](https://yd-yin.github.io/), [Yang Xiao<sup>2</sup>](https://youngxiao13.github.io/), [Jingwei Huang<sup>2</sup>](https://cs.stanford.edu/people/jingweih/), [He Wang<sup>1</sup>](https://hughw19.github.io/), [Baoquan Chen<sup>1</sup>](http://cfcs.pku.edu.cn/baoquan/)
-- Institutes: <sup>1</sup>Peking University, <sup>2</sup>Huawei Riemann Lab
-- Technical Report: TBD
+ [Yingda Yin<sup>1,2*</sup>](https://yd-yin.github.io/), [Yuzheng Liu<sup>2,3*</sup>](https://github.com/Ly-kc/) [Yang Xiao<sup>4*</sup>](https://youngxiao13.github.io/), [Daniel Cohen-Or<sup>5</sup>](https://danielcohenor.com/), [Jingwei Huang<sup>6</sup>](https://cs.stanford.edu/people/jingweih/), [Baoquan Chen<sup>2,3</sup>](http://cfcs.pku.edu.cn/baoquan/)
 
+<sup>1</sup>School of Computer Science, Peking University &nbsp; &nbsp;
+<sup>2</sup>National Key Lab of General AI, China &nbsp; &nbsp; 
+<sup>3</sup>School of Intelligence Science and Technology, Peking University &nbsp; &nbsp; 
+<sup>4</sup>Ecole des Ponts ParisTech&nbsp; &nbsp;           <sup>5</sup>Tel-Aviv University &nbsp; &nbsp;
+<sup>6</sup>Tencent &nbsp; &nbsp;
 
-*This project is still in progress. Any issues or pull requests are highly welcomed.*
+**CVPR 2024**
+
+[Project Page](https://github.com/yd-yin/SAI3D) | [Arxiv Paper](https://arxiv.org/abs/2312.11557)
 
 ## Introduction
 
-We propose an approach for **open-vocabulary 3D instance segmentation**, leveraging the powerful 2D segmentation foundation models (e.g.,  SAM). Our method not only offers rapid deployment without additional training but also accommodates sparse viewpoints and large-scale scenes effectively.
+We introduce SAI3D, a novel zero-shot 3D instance segmentation approach that synergistically leverages geometric priors and semantic cues derived from Segment Anything Model (SAM). 
 
-<img src="assets/teaser.jpg" alt="image-20230607152621231" style="zoom:35%;" />
+<img src="assets\pipeline.png" style="zoom: 33%;" />
 
-Existing methods focused on distilling CLIP features into either point cloud or NeRF representations, which only yield semantic segmentation and necessitate training steps.
-
-## Comparisons with related work
-
-| Method               | Representation | Foundation<br />model | Open-<br />vocabulary | Instance<br />Segmentation | Sparse<br />viewpoints | Training-<br />free |
-|----------------------|:--------------:|:---------------------:|:---------------------:|:--------------------------:|:----------------------:|:-------------------:|
-| **DFF [1]**          |      NeRF      |         CLIP          |        &check;        |          &cross;           |        &cross;         |       &cross;       |
-| **LERF [2]**         |      NeRF      |         CLIP          |        &check;        |          &cross;           |        &cross;         |       &cross;       |
-| **SA3D [3]**         |      NeRF      |          SAM          |        &check;        |          &check;           |        &cross;         |       &check;       |
-| **OpenScene [4]**    |  Point cloud   |         CLIP          |        &check;        |          &cross;           |        &check;         |       &cross;       |
-| **SAM3D [5]**        |  Point cloud   |          SAM          |        &check;        |         auto-mask          |        &cross;         |       &check;       |
-| **OpenSAI3D (Ours)** |  Point cloud   |     Grounded SAM      |        &check;        |          &check;           |        &check;         |       &check;       |
-
-
-1. Kobayashi et al. "Decomposing NeRF for Editing via Feature Field Distillation." NeurIPS 2022
-2. Kerr et al. "LERF: Language Embedded Radiance Fields." ArXiv 2303
-3. Cen et al. "Segment Anything in 3D with NeRFs." ArXiv 2304
-4. Peng et al. "OpenScene: 3D Scene Understanding with Open Vocabularies." CVPR 2023
-5. Yang et al. "SAM3D: Segment Anything in 3D Scenes." ArXiv 2306
-
-
-## Results
-
-<img src="assets/result1.jpg" alt="image-20230607152728326" style="zoom:35%;" />
-
-<img src="assets/result2.jpg" alt="image-20230607153251935" style="zoom:35%;" />
+Our approach combines geometric priors with the capabilities of 2D foundation models. We over-segment 3D point clouds into superpoints (top-left), and generate 2D image masks using SAM (bottom-left). We then construct a scene graph that quantifies the pairwise affinity scores of super points (middle). Finally, we leverage a progressive region growing to gradually merge 3D superpoints into the final 3D instance segmentation masks (right).
 
 ## Usage
 
 ### Installation
 
+Prepare environment
+
 ```bash
-conda create -n opensai python=3.8
-conda activate opensai
+conda create -n sai3d python=3.8
+conda activate sai3d
 pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
-pip install open3d natsort
+pip install open3d natsort matplotlib tqdm opencv-python scipy plyfile
 ```
 
-Install Grounded-Segment-Anything 
+Install Semantic-SAM
 
 ```bash
-cd Grounded-Segment-Anything
-export CUDA_HOME=/usr/local/cuda
-python -m pip install -e segment_anything
-python -m pip install -e GroundingDINO
+git clone https://github.com/UX-Decoder/Semantic-SAM.git Semantic-SAM --recursive
+#if you encounter any problem about cuda version, try using cuda11.8 with the following command
+#conda install nvidia/label/cuda-11.8.0::cuda  
+python -m pip install 'git+https://github.com/MaureenZOU/detectron2-xyz.git'
+pip install git+https://github.com/cocodataset/panopticapi.git
+cd Semantic_SAM
+python -m pip install -r requirements.txt
+cd semantic_sam/body/encoder/ops
+sh ./make.sh
+cd - && mkdir checkpoints && cd checkpoints
+wget https://github.com/UX-Decoder/Semantic-SAM/releases/download/checkpoint/swinl_only_sam_many2many.pth
 ```
 
-Download pretrained models
-
+Install OpenMask3D(if need semantic)
 ```bash
-cd Grounded-Segment-Anything
-mkdir ckpt && cd ckpt
-wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
-wget https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth
+git clone https://github.com/OpenMask3D/openmask3d.git openmask3d --recursive
+cd openmask3d
+conda create --name=openmask3d python=3.8.5 # create new virtual environment
+conda activate openmask3d # activate it
+bash install_requirements.sh  # install requirements
+pip install -e .  # install current repository in editable mode
+mkdir checkpoints && cd checkpoints
+wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth  #download SAM ckpt
 ```
 
 ### Data Preparation
 
-We use Matterport3D dataset. 
+#### ScanNet
+Download [ScanNetV2 / ScanNet200](https://github.com/ScanNet/ScanNet) and organize the dataset as follows: 
 
-For testing on our demo scene `RPmz2sHmrrY`, download data from [Google Drive](https://drive.google.com/file/d/1BRtP3UXMUjvq56AJQVHACtY3jNaiZRR2/view?usp=sharing) and unzip it to `data/matterport_2d`
-
-```bash
-mkdir -p data/matterport_2d
-unzip RPmz2sHmrrY.zip
+```
+data
+ ├── ScanNet
+ │   ├── posed_images
+ │   |   ├── scene0000_00
+ │   |   │   ├──intrinsic_color.txt   
+ │   |   │   ├──intrinsic_depth.txt   
+ │   |   │   ├──0000.jpg     //rgb image
+ │   |   │   ├──0000.png     //depth image
+ │   |   │   ├──0000.txt     //extrinsic
+ │   |   │   └── ...
+ │   |   └── ...
+ │   ├── scans
+ │   |   ├── scene0000_00
+ │   |   └── ...
+ │   ├── Tasks
+ │   |   ├── Benchmark
+ │   |   │   ├──scannetv2_val.txt  
+ │   |   │   ├──scannetv2_train.txt  
+ │   |   │   └── ...
 ```
 
-For all scenes in Matterport3D, download the pre-processed data offered by [OpenScene](https://pengsongyou.github.io/openscene).
 
-```bash
-cd data
-wget https://cvg-data.inf.ethz.ch/openscene/data/matterport_processed/matterport_3d.zip
-wget https://cvg-data.inf.ethz.ch/openscene/data/matterport_processed/matterport_2d.zip
-unzip matterport_3d.zip matterport_2d.zip
-```
 
-### Get Started
+### Get class-agnostic masks
 
-1. **Preparation: Obtain 2D Grounded-SAM results**
+1. **Obtain 2D SAM results**
+   
+   Change [the config here](https://github.com/UX-Decoder/Semantic-SAM/blob/e3b9/configs/semantic_sam_only_sa-1b_swinL.yaml#L42) to false, and set the required parameter in this [script](scripts/sam_scannet.sh) then run:
+   ```bash
+   bash ./scripts/sam_scannet.sh
+   ```
+
+   The results will be stored at `data/ScanNet/2D_masks`, where the 2D segmentation results and visualization of 2D masks will be named as `maskraw_<frame_number>.png` and `maskcolor_<frame_number>.png` respectively.
+
+2. **Obtain 3D superpoints**
+   For ScanNet dataset, superpoints are already provided in `scans/<scene_id>/<scene_id>_vh_clean_2.0.010000.segs.json`
+
+   To generate superpoint on mesh of other dataset, we also use the mesh segmentator provided by ScanNet directly. Please check [here](https://github.com/ScanNet/ScanNet/tree/master/Segmentator) to see the usage.
+
+
+3. **3D instance segmentation by region growing**
+
+   Set the required parameter in this [script](scripts/seg_scannet.sh), then run SAI3D by using the following command:
    
    ```bash
-   cd Grounded-Segment-Anything
-   python run_gsam.py --text=TEXT --scene_id=SCENE_ID --thres=THRES_GSAM -g=GPU_ID 
+   bash scripts/seg_scannet.sh
    ```
+
+   The resulting class-agnostic masks will be exported into the format for [ScanNet instance segmentation benchmark](https://github.com/ScanNet/ScanNet/blob/master/BenchmarkScripts/3d_evaluation/evaluate_semantic_instance.py).
+
+
+
+### Evaluate class-agnostic results
+   Now you can implement class-agnostic evaluation directly on the results we got, which focuses only on the accuracy of the instance masks without considering any semantic label
+
+   We modify the original ScanNet instance segmentation benchmark to conduct it. We collect all 18 classes(excluding wall and floor) of gt masks in ScanNet-v2 dataset as our gt class-agnostic masks, and the AP score is reported over all of the foreground masks. 
+
+   We provide processed gt class-agnostic masks [here(coming soon)](??). Please download and extract it into your `GT_DIR`
+
+   1. Prepare environment for ScanNet benchmark
+      ```bash
+      conda create -n eval python=2.7
+      conda activate eval
+      cd evaluation
+      pip install -r requirements.txt
+      ```
+   2. Start evaluation
+      ```bash
+      python evauation/evaluate_class_agnostic_instance.py \
+      --pred_path=PREDICTION_DIR \
+      --gt_path=GT_DIR
+      ```
+
+   The numerical results will be saved under the directory of your predicitons by default.
+
+### Assign semantic with OpenMask3D and conduct 3D instance segmentation evaluation
+   We prove that our proposed class-agnostic masks are more accurate and can be adopted in tasks like semantic instance segmentation. Here we choose OpenMask3D to assign semantic label for our class-agnostic masks.
+
+   1. Reorganize scannet dataset 
+
+      Since OpenMask3D requires ScanNet dataset to be organized like [this](https://github.com/OpenMask3D/openmask3d/blob/fb9b/README.md?plain=1#L148-L168), we provide a script to reorganize the dataset with softlink.  
+      ```bash
+         python helpers/format_convertion.py              \
+         --app=0                                        \
+         --base_dir=PATH_TO_PREVIOUS_SCANNET_DATASET    \
+         --out_dir=PATH_TO_REORGANIZED_SCANNET_DATASET
+      ```
+      For example, 
+      ```bash
+         python helpers/format_convertion.py              \
+         --app=0                                        \
+         --base_dir="data/ScanNet"                      \
+         --out_dir="data/ScanNet_OpenMask3D"
+      ```
+      > According to the convention of OpenMask3D, color and depth image of your data should share the same resolution. If not, please replace [this line in OpenMask3D](https://github.com/OpenMask3D/openmask3d/blob/6488/openmask3d/data/load.py#L73) with the following codes to adjust the resolution of color image to the same as depth image's when loading them in OpenMask3D:
+      ```python
+         img = Image.open(img_path).convert("RGB").resize(DEPTH_RESOLUTION,Image.BILINEAR)
+         images.append(img)
+      ```
+
+   2. Prepare class-agnostic masks
+
+      We've already got class-agnosic predictions from the previous section, and exported them into evaluation format for ScanNet benchmark.
+
+      However, OpenMask3D requires class-agnostic masks to be saved in a `.pt` format before assigning semantic for them. So please run the following command to convert the previous format of class-agnostic predictions into the input format required by OpenMask3D. 
+
+      ```bash
+         python helpers/format_convertion.py    \ 
+         --app=1                              \   
+         --base_dir=PATH_TO_PREDICTION_DIR    \
+         --out_dir=PATH_TO_SAVE_PREDICTION_OF_NEW_FORMAT
+      ```
+      For example,
+      ```bash
+         RESULT_NAME="demo_scannet_5view_merge200_2-norm_semantic-sam_connect(0.9,0.5,5)_depth2"
+         python helpers/format_convertion.py                    \     
+         --app=1                                              \
+         --base_dir="data/ScanNet/results/${RESULT_NAME}"     \
+         --out_dir="data/class_agnostic_masks"
+      ```
+
+   3. Assign semantic and evaluate
    
-   where `thres` controls the preservation of a box, i.e., boxes with similarities to `text` higher than `thres` are preserved.
-   
-   For example,
-   
-   ```bash
-   cd Grounded-Segment-Anything
-   python run_gsam.py --text="picture frame" --scene_id=RPmz2sHmrrY --thres=0.5 -g=0
-   ```
-   
-   We set `save_dir=./data/matterport_2d/<scene_id>/results/<text>/` 
-   
-   The results will be stored at `save_dir/<text>_gsam<thres>/`
-   
-2. **Our method: 3D instance segmentation**
-   
-   ```bash
-   python main.py --text="picture frame" --scene_id=SCENE_ID --thres_gsam=THRES_GSAM --thres_obj=THRES_OBJ --thres_connect=THRES_CONNECT
-   ```
-   
-   where  `thres_gsam` should align with step1, `thres_obj` is used to determine the semantic of a point, and `thres_connect` is used to determine the connectivity of neighboring points. There is no need of GPU.
-   
-   For example,
-   
-   ```bash
-   python main.py --text="picture frame" --scene_id=RPmz2sHmrrY --thres_gsam=0.5 --thres_obj=0.3 --thres_connect=0.8
-   ```
-   
-   The results will be stored at `save_dir/points_objness_label_gsam<thres_gsam>_obj<thres_obj>_connect<thres_connect>.pts` in the format of `x y z objectness labelID`. We further filter out labels whose population are fewer than `<amount>`, saved in `save_dir/points_objness_label_gsam<thres_gsam>_obj<thres_obj>_connect<thres_connect>_amount<amount>.pts`
+      We provide processed gt masks for ScanNet200 semantic instance segmentation [here(coming soon)](??). 
 
-### Visualization
+      Now you can compute the per-mask scene features and run the evaluation of OpenMask3D on the whole ScanNet200 dataset.Set the required parameter in this [script](scripts/run_openmask3d_scannet200.sh) and run the following command:
+      
+      ```bash
+      bash scripts/run_openmask3d_scannet200.sh
+      ```
 
-We assign random colors to each object label. 
-
-```bash
-python vis.py --text=TEXT --scene=SCENE_ID --pts_name=PTS_NAME
-```
-
-For example,
-
-```bash
-python vis.py --text="picture frame" --scene=RPmz2sHmrrY --pts_name=points_objness_label_gsam0.5_obj0.3_connect0.8_amount50.pts
-```
-
-We only provide mesh files of the demo scene considering license issues. If you want to get mesh visualizations of other scenes, please access via [Matterport3D website](https://niessner.github.io/Matterport/) and download `region_segmentations` to `./data/matterport_2d/<SCENE_ID>/`.
-
-The colored point cloud will be stored at `save_dir/<pts_name>_color.pts`. The corresponding meshes will be stored at `save_dir/vis_mesh/`.
-
-## Pipeline
-
-1. Semantic segmentation
-2. Instance segmentation
-   1. **Coarse-level** segmentation by geometry distance
-   2. **Fine-level** segmentation by 2D masks
-
-<img src="assets/process.jpg" alt="image-20230608154442658" style="zoom:35%;" />
-
-## Acknowledgements
-
-This project is inspired by [Segment Anything](https://segment-anything.com/), [Grounded Segment Anything](https://github.com/IDEA-Research/Grounded-Segment-Anything) and [OpenScene](https://pengsongyou.github.io/openscene).
+      This script first computes the mask features associated with each class-agnostic mask, and then query masks with 200 class names in ScanNet200 to assign semantic label for them. Afterwards, the evaluation script automatically runs in order to obtain 3D closed-vocabulary semantic instance segmentation scores.

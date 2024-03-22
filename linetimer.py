@@ -1,5 +1,5 @@
 """
-Author: https://github.com/JustasB/linetimer
+Code cridit: https://github.com/JustasB/linetimer
 """
 
 

@@ -1,0 +1,6 @@
+[submodule "openmask3d"]
+	path = openmask3d
+	url = https://github.com/OpenMask3D/openmask3d.git
+[submodule "Semantic-SAM"]
+	path = Semantic-SAM
+	url = https://github.com/UX-Decoder/Semantic-SAM.git

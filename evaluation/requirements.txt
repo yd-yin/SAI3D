@@ -1,0 +1,10 @@
+certifi==2020.6.20
+colorama==0.4.4
+enum34==1.1.6
+futures==3.3.0
+imageio==2.6.1
+numpy==1.13.1
+olefile==0.46
+Pillow==4.2.1
+plyfile==0.7.3
+tqdm==4.63.0
