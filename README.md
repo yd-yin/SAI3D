@@ -10,7 +10,7 @@
 
 **CVPR 2024**
 
-[Project Page](https://github.com/yd-yin/SAI3D) | [Arxiv Paper](https://arxiv.org/abs/2312.11557)
+[Project Page](https://yd-yin.github.io/SAI3D/) | [Arxiv Paper](https://arxiv.org/abs/2312.11557)
 
 ## Introduction
 
