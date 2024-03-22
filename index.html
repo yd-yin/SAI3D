@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SAI3D: Segment Any Instance in 3D Scenes</title>
+  <!-- Bootstrap -->
+  <link href="css/bootstrap-4.4.1.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="css/index.css">
+  <style>
+    body {
+      background: rgb(255, 255, 255) no-repeat fixed top left;
+      font-family: 'Open Sans', sans-serif;
+    }
+  </style>
+
+</head>
+
+<!-- cover -->
+<section>
+  <div class="jumbotron text-center mt-0">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col">
+          <h2 style="font-size:40px;"><b>SAI3D: Segment Any Instance in 3D Scenes</b></h2> <br>
+          <h2 style="font-size:30px;">CVPR2024</h2>
+          <!-- <h4 style="color:#6e6e6e;"> In Review </h4> -->
+          <hr>
+          <h5>
+            <br>
+            <a href="https://yd-yin.github.io/">Yingda Yin</a><sup>1,2*</sup>&nbsp; &nbsp; &nbsp;
+            <a href="https://github.com/Ly-kc">Yuzheng Liu</a><sup>2,3*</sup>&nbsp; &nbsp; &nbsp;
+            <a href="https://youngxiao13.github.io/">Yang Xiao</a><sup>4*</sup>&nbsp; &nbsp; &nbsp;
+            <a href="https://danielcohenor.com/">Daniel Cohen-Or</a><sup>5</sup>&nbsp; &nbsp; &nbsp;
+            <a href="https://cs.stanford.edu/~jingweih/">Jingwei Huang</a><sup>6</sup>&nbsp; &nbsp; &nbsp;
+            <a href="https://baoquanchen.info/">Baoquan Chen</a><sup>2,3</sup>
+          </h5>
+          <h6>
+            <br>
+            <p> <sup>1</sup>School of Computer Science, Peking University &nbsp; &nbsp;
+              <sup>2</sup>National Key Lab of General AI, China &nbsp; &nbsp;  <br>
+              <sup>3</sup>School of Intelligence Science and Technology, Peking University &nbsp; &nbsp;  <br>
+              <sup>4</sup>Ecole des Ponts ParisTech  &nbsp; &nbsp; 
+              <sup>5</sup>Tel-Aviv University &nbsp; &nbsp;
+              <sup>6</sup>Tencent &nbsp; &nbsp;
+              <br>
+            </p>
+            <p>
+              <sup>*</sup> equal contribution
+              <br><br>
+            </p>
+          </h6>
+            <div class="row justify-content-center">
+              <div class="column">
+                <p class="mb-5"><a class="btn btn-large btn-light" href="https://arxiv.org/abs/2312.11557" role="button"
+                    target="_blank">
+                    <i class="fa fa-file"></i> ArXiv </a> </p>
+              </div>
+              <div class="column">
+                  <p class="mb-5"><a class="btn btn-large btn-light" id="code_soon" href="???" role="button" target="_blank" disabled=1>
+                <i class="fa fa-github-alt"></i> Code (coming soon) </a> </p>
+              </div>
+            </div>
+            
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section>
+  <div class="container" style="width:70%" id="main-video">
+    <div class="row">
+      <div class="col-12">
+        <div class="row justify-content-center" style="align-items:center; display:flex;">
+          <!-- <img src="images/teaser.png" width="90%" height="500px" > -->
+          <img src="images/teaser.jpg" width="45%" >
+          <!-- <iframe src="images/teaser4_00.png" width="100%" height="600px" ></iframe> -->
+          <!-- <video id="main-video" autobuffer muted autoplay loop controls>
+            <source src="videos/teaser.mp4" type="video/mp4">
+          </video> -->
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+<br>
+<!-- <br> -->
+
+<!-- abstract -->
+<section>
+  <div class="container" style="width:70%">
+    <div class="row">
+      <div class="col-12">
+        <h3><strong>Abstract</strong></h3>
+        <hr style="margin-top:0px">
+        <p class="text-justify">
+          Advancements in 3D instance segmentation have traditionally been tethered to the availability of annotated datasets, 
+          limiting their application to a narrow spectrum of object categories. 
+          Recent efforts have sought to harness vision-language models like CLIP for open-set semantic reasoning, 
+          yet these methods struggle to distinguish between objects of the same categories and rely on specific prompts that are not universally applicable.
+          In this paper, we introduce SAI3D, 
+          a novel zero-shot 3D instance segmentation approach that synergistically leverages geometric priors and semantic cues derived from Segment Anything Model (SAM). 
+          Our method partitions a 3D scene into geometric primitives, 
+          which are then progressively merged into 3D instance segmentations that are consistent with the multi-view SAM masks.
+          Moreover, we design a hierarchical region-growing algorithm with a dynamic thresholding mechanism, which largely improves the robustness of fine-grained 3D scene parsing.
+          Empirical evaluations on ScanNet and the more challenging ScanNet++ datasets demonstrate the superiority of our approach. 
+          Notably, SAI3D outperforms existing open-vocabulary baselines and even surpasses fully-supervised methods in class-agnostic segmentation on ScanNet++.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+<br>
+<br>
+
+<!-- method -->
+<section>
+  <div class="container" style="width:70%">
+    <div class="row">
+      <div class="col-12">
+        <h3><strong>Method</strong></h3>
+        <hr style="margin-top:0px">
+        <div style="text-align: center;">
+        <img src="images/pipeline.jpg" width="85%">
+        </div>
+        <br >
+        <br >
+        <p class="text-justify">
+          Our approach combines geometric priors with the capabilities of 2D foundation models. We over-segment
+          3D point clouds into superpoints (top-left), and generate 2D image masks using SAM (bottom-left). We then construct a scene graph that
+          quantifies the pairwise affinity scores of super points (middle). Finally, we leverage a progressive region growing to gradually merge 3D
+          superpoints into the final 3D instance segmentation masks (right).
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+<br>
+<br>
+
+<!-- scene_selector -->
+<section>
+  <div class="container" style="width:100%">
+    <div class="row">
+      <div class="col-12">
+        <h3><strong>Qualitative Results on ScanNet++/ScanNet</strong></h3>
+        <hr style="margin-top:0px">
+
+        <b>Click the thumbnails below to select scenes.</b>
+        <div class="base-row" style="display: inline-block">
+          <button class="slide-arrow" id="slide-arrow-prev" onclick="slide_left()">
+              &#8249;
+          </button>
+          <div class="base-row thumbnail-row" , id="thumbnails-scroll">
+
+            <div class="base-col thumbnail-col">
+              <button class="thumbnail-btn" id="thumb-0" onclick="select_one_scene_view1('scannetpp_13c3')">
+                  <img src="images/thumbnails/13c3.jpg" class="thumbnails" />
+                  ScanNet++ 13c3
+              </button>
+            </div>
+            <div class="base-col thumbnail-col">
+              <button class="thumbnail-btn" id="thumb-0" onclick="select_one_scene_view1('scannetpp_3f15')">
+                  <img src="images/thumbnails/3f15.jpg" class="thumbnails" />
+                  ScanNet++ 3f15
+              </button>
+            </div>
+            <div class="base-col thumbnail-col">
+              <button class="thumbnail-btn" id="thumb-0" onclick="select_one_scene_view1('scannetpp_6115')">
+                  <img src="images/thumbnails/6115.jpg" class="thumbnails" />
+                  ScanNet++ 6115
+              </button>
+            </div>
+            <div class="base-col thumbnail-col">
+              <button class="thumbnail-btn" id="thumb-0" onclick="select_one_scene_view1('scannetpp_5ee7')">
+                  <img src="images/thumbnails/5ee7.jpg" class="thumbnails" />
+                  ScanNet++ 5ee7
+              </button>
+            </div>
+            <div class="base-col thumbnail-col">
+              <button class="thumbnail-btn" id="thumb-0" onclick="select_one_scene_view1('scannet0549_00')">
+                  <img src="images/thumbnails/0549.jpg" class="thumbnails" />
+                  ScanNet 0549_00
+              </button>
+            </div>
+            <div class="base-col thumbnail-col">
+              <button class="thumbnail-btn" id="thumb-0" onclick="select_one_scene_view1('scannet0426_00')">
+                  <img src="images/thumbnails/0426.jpg" class="thumbnails" />
+                  ScanNet 0426_00
+              </button>
+            </div>
+            <div class="base-col thumbnail-col">
+              <button class="thumbnail-btn" id="thumb-0" onclick="select_one_scene_view1('scannet0011_00')">
+                  <img src="images/thumbnails/0011.jpg" class="thumbnails" />
+                  ScanNet 0011_00
+              </button>
+            </div>
+          </div>
+          <button class="slide-arrow" id="slide-arrow-next" onclick="slide_right()">
+              &#8250;
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<br>
+<br>
+
+<section>
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+
+
+        <div class="scene" id="scannetpp_13c3">
+          <h4><strong>3D Instance Segmentation</strong></h4>
+          <div class="sketchfab-embed-wrapper" width="80%" style="text-align:center">
+            <iframe title="ScanNetpp 13c3" style="clip-path: inset(1px 1px)" width="50%" height="360" src="https://sketchfab.com/3d-models/scannet-13c3e046d7-2c3cef76d34d439aa8847714daa27735/embed?autospin=0.2&autostart=1&camera=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" mozallowfullscreen="true" webkitallowfullscreen="true"> </iframe>
+          </div>
+          <p style="text-align:center">
+            <b >Left click to rotate, right click to translate, scroll wheel to zoom.</b>
+          </p>
+          <!-- <br>
+          <br> -->
+
+          <h4><strong>Comparisons</strong></h4>
+          <!-- <p>
+            <b>Click the buttons below to select views.</b>
+          </p> -->
+
+          <div class="tabs">
+            <!-- <div class="tab" id="scannet0050_00_top_down_tab" onclick="showExamples('scannet0050_00_top_down_image', this)">Top-Down View</div> -->
+            <div class="tab" id="scannetpp_13c3_view1_tab" onclick="showExamples('scannetpp_13c3_view1', this)">View1</div>
+            <div class="tab" id="scannetpp_13c3_view2_tab" onclick="showExamples('scannetpp_13c3_view2', this)">View2</div>
+          </div>
+          
+          <!-- <div id="scannet0050_00_top_down_image" class="example">
+            <img src="images/comparison/0050_top.png" width="80%">
+          </div> -->
+          
+          <div id="scannetpp_13c3_view1" class="example" style="text-align:center">
+            <img src="images/comparison/13c3_1.jpg" width="70%" >
+          </div>
+
+          <div id="scannetpp_13c3_view2" class="example" style="text-align:center">
+            <img src="images/comparison/13c3_2.jpg" width="70%" >
+          </div>
+  
+  
+        </div>
+
+        <div class="scene" id="scannetpp_3f15">
+          <h4><strong>3D Instance Segmentation</strong></h4>
+          <div class="sketchfab-embed-wrapper" width="80%" style="text-align:center"> 
+            <iframe title="ScanNetpp 3f15" style="clip-path: inset(1px 1px)" width="50%" height="360" src="https://sketchfab.com/3d-models/scannet-3f15a9266d-bb34372cabc34c1e9425268aa1e07c9b/embed?autospin=0.2&autostart=1&camera=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" mozallowfullscreen="true" webkitallowfullscreen="true"> </iframe> 
+          </div>
+          <p style="text-align:center">
+            <b >Left click to rotate, right click to translate, scroll wheel to zoom.</b>
+          </p>
+          <!-- <br>
+          <br> -->
+
+          <h4><strong>Comparisons</strong></h4>
+          <!-- <p>
+            <b>Click the buttons below to select views.</b>
+          </p> -->
+
+          <div class="tabs">
+            <!-- <div class="tab" id="scannet0050_00_top_down_tab" onclick="showExamples('scannet0050_00_top_down_image', this)">Top-Down View</div> -->
+            <div class="tab" id="scannetpp_3f15_view1_tab" onclick="showExamples('scannetpp_3f15_view1', this)">View1</div>
+            <div class="tab" id="scannetpp_3f15_view2_tab" onclick="showExamples('scannetpp_3f15_view2', this)">View2</div>
+          </div>
+          
+          <!-- <div id="scannet0050_00_top_down_image" class="example">
+            <img src="images/comparison/0050_top.png" width="80%">
+          </div> -->
+          
+          <div id="scannetpp_3f15_view1" class="example" style="text-align:center">
+            <img src="images/comparison/3f15_1.jpg" width="70%" >
+          </div>
+
+          <div id="scannetpp_3f15_view2" class="example" style="text-align:center">
+            <img src="images/comparison/3f15_2.jpg" width="70%" >
+          </div>
+  
+  
+        </div>
+
+        <div class="scene" id="scannetpp_6115">
+          <h4><strong>3D Instance Segmentation</strong></h4>
+          <div class="sketchfab-embed-wrapper" width="80%" style="text-align:center"> 
+            <iframe title="ScanNetpp 6115" style="clip-path: inset(1px 1px)" width="50%" height="360" src="https://sketchfab.com/3d-models/scannetpp-6115eddb86-2798d2c887ac401897aabcc01e660026/embed?autospin=0.2&autostart=1&camera=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" mozallowfullscreen="true" webkitallowfullscreen="true"> </iframe> 
+          </div>
+          <p style="text-align:center">
+            <b >Left click to rotate, right click to translate, scroll wheel to zoom.</b>
+          </p>
+          <!-- <br>
+          <br> -->
+
+          <h4><strong>Comparisons</strong></h4>
+          <!-- <p>
+            <b>Click the buttons below to select views.</b>
+          </p> -->
+
+          <div class="tabs">
+            <!-- <div class="tab" id="scannet0050_00_top_down_tab" onclick="showExamples('scannet0050_00_top_down_image', this)">Top-Down View</div> -->
+            <div class="tab" id="scannetpp_6115_view1_tab" onclick="showExamples('scannetpp_6115_view1', this)">View1</div>
+            <div class="tab" id="scannetpp_6115_view2_tab" onclick="showExamples('scannetpp_6115_view2', this)">View2</div>
+          </div>
+          
+          <!-- <div id="scannet0050_00_top_down_image" class="example">
+            <img src="images/comparison/0050_top.png" width="80%">
+          </div> -->
+          
+          <div id="scannetpp_6115_view1" class="example" style="text-align:center">
+            <img src="images/comparison/6115_1.jpg" width="70%" >
+          </div>
+
+          <div id="scannetpp_6115_view2" class="example" style="text-align:center">
+            <img src="images/comparison/6115_2.jpg" width="70%" >
+          </div>
+  
+        </div>
+
+        <div class="scene" id="scannetpp_5ee7">
+          <h4><strong>3D Instance Segmentation</strong></h4>
+          <div class="sketchfab-embed-wrapper" width="80%" style="text-align:center"> 
+            <iframe title="ScanNetpp 5ee7" style="clip-path: inset(1px 1px)" width="50%" height="360" src="https://sketchfab.com/3d-models/scannet-5ee7c22ba0-ee6470734a9644799f1b7a723e320e54/embed?autospin=0.2&autostart=1&camera=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" mozallowfullscreen="true" webkitallowfullscreen="true"> </iframe> 
+          </div>
+          <p style="text-align:center">
+            <b >Left click to rotate, right click to translate, scroll wheel to zoom.</b>
+          </p>
+          <!-- <br>
+          <br> -->
+
+          <h4><strong>Comparisons</strong></h4>
+          <!-- <p>
+            <b>Click the buttons below to select views.</b>
+          </p> -->
+
+          <div class="tabs">
+            <!-- <div class="tab" id="scannet0050_00_top_down_tab" onclick="showExamples('scannet0050_00_top_down_image', this)">Top-Down View</div> -->
+            <div class="tab" id="scannetpp_5ee7_view1_tab" onclick="showExamples('scannetpp_5ee7_view1', this)">View1</div>
+            <div class="tab" id="scannetpp_5ee7_view2_tab" onclick="showExamples('scannetpp_5ee7_view2', this)">View2</div>
+          </div>
+          
+          <!-- <div id="scannet0050_00_top_down_image" class="example">
+            <img src="images/comparison/0050_top.png" width="80%">
+          </div> -->
+          
+          <div id="scannetpp_5ee7_view1" class="example" style="text-align:center">
+            <img src="images/comparison/5ee7_1.jpg" width="70%" >
+          </div>
+
+          <div id="scannetpp_5ee7_view2" class="example" style="text-align:center">
+            <img src="images/comparison/5ee7_2.jpg" width="70%" >
+          </div>
+  
+  
+        </div>
+
+        <div class="scene" id="scannet0549_00">
+          <h4><strong>3D Instance Segmentation</strong></h4>
+          <div class="sketchfab-embed-wrapper" width="80%" style="text-align:center"> 
+            <iframe title="ScanNet 0549_00" style="clip-path: inset(1px 1px)" width="50%" height="360" src="https://sketchfab.com/3d-models/scannet-0549-00-3deb9d35b2404da4990b0fd0bb848bfc/embed?autospin=0.2&autostart=1&camera=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" mozallowfullscreen="true" webkitallowfullscreen="true"> </iframe> 
+          </div>
+          <p style="text-align:center">
+            <b >Left click to rotate, right click to translate, scroll wheel to zoom.</b>
+          </p>
+          <!-- <br>
+          <br> -->
+
+          <h4><strong>Comparisons</strong></h4>
+          <!-- <p>
+            <b>Click the buttons below to select views.</b>
+          </p> -->
+
+          <div class="tabs">
+            <!-- <div class="tab" id="scannet0549_00_top_down_tab" onclick="showExamples('scannet0549_00_top_down_image', this)">Top-Down View</div> -->
+            <div class="tab" id="scannet0549_00_view1_tab" onclick="showExamples('scannet0549_00_view1', this)">View1</div>
+            <div class="tab" id="scannet0549_00_view2_tab" onclick="showExamples('scannet0549_00_view2', this)">View2</div>
+          </div>
+          
+          
+          <div id="scannet0549_00_view1" class="example" style="text-align:center">
+            <img src="images/comparison/0549_1.jpg" width="70%">
+          </div>
+
+          <div id="scannet0549_00_view2" class="example" style="text-align:center">
+            <img src="images/comparison/0549_2.jpg" width="70%">
+          </div>
+  
+        </div>
+
+        <div class="scene" id="scannet0426_00">
+          <h4><strong>3D Instance Segmentation</strong></h4>
+          <div class="sketchfab-embed-wrapper" width="80%" style="text-align:center"> 
+            <iframe title="ScanNet 0426_00" style="clip-path: inset(1px 1px)" width="50%" height="360" src="https://sketchfab.com/3d-models/scannet-0426-00-e67c72959de343019bff2b9bedf1e026/embed?autospin=0.2&autostart=1&camera=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" mozallowfullscreen="true" webkitallowfullscreen="true"> </iframe> 
+          </div>
+          <p style="text-align:center">
+            <b >Left click to rotate, right click to translate, scroll wheel to zoom.</b>
+          </p>
+          <!-- <br>
+          <br> -->
+
+          <h4><strong>Comparisons</strong></h4>
+          <!-- <p>
+            <b>Click the buttons below to select views.</b>
+          </p> -->
+
+          <div class="tabs">
+            <!-- <div class="tab" id="scannet0549_00_top_down_tab" onclick="showExamples('scannet0549_00_top_down_image', this)">Top-Down View</div> -->
+            <div class="tab" id="scannet0426_00_view1_tab" onclick="showExamples('scannet0426_00_view1', this)">View1</div>
+            <div class="tab" id="scannet0426_00_view2_tab" onclick="showExamples('scannet0426_00_view2', this)">View2</div>
+          </div>
+          
+          
+          <div id="scannet0426_00_view1" class="example" style="text-align:center">
+            <img src="images/comparison/0426_1.jpg" width="70%">
+          </div>
+
+          <div id="scannet0426_00_view2" class="example" style="text-align:center">
+            <img src="images/comparison/0426_2.jpg" width="70%">
+          </div>
+  
+        </div>
+        
+
+        <div class="scene" id="scannet0011_00">
+          <h4><strong>3D Instance Segmentation</strong></h4>
+          <div class="sketchfab-embed-wrapper" width="80%" style="text-align:center"> 
+            <iframe title="ScanNet 0011_00" style="clip-path: inset(1px 1px)" width="50%" height="360" src="https://sketchfab.com/3d-models/scannet-0011-00-2aa24d05311a459c9e9403c2f2968579/embed?autospin=0.2&autostart=1&camera=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" mozallowfullscreen="true" webkitallowfullscreen="true"> </iframe> 
+          </div>
+          <p style="text-align:center">
+            <b >Left click to rotate, right click to translate, scroll wheel to zoom.</b>
+          </p>
+          <!-- <br>
+          <br> -->
+
+          <h4><strong>Comparisons</strong></h4>
+          <!-- <p>
+            <b>Click the buttons below to select views.</b>
+          </p> -->
+
+          <div class="tabs">
+            <!-- <div class="tab" id="scannet0549_00_top_down_tab" onclick="showExamples('scannet0549_00_top_down_image', this)">Top-Down View</div> -->
+            <div class="tab" id="scannet0011_00_view1_tab" onclick="showExamples('scannet0011_00_view1', this)">View1</div>
+            <div class="tab" id="scannet0011_00_view2_tab" onclick="showExamples('scannet0011_00_view2', this)">View2</div>
+          </div>
+          
+          
+          <div id="scannet0011_00_view1" class="example" style="text-align:center">
+            <img src="images/comparison/0011_1.jpg" width="70%">
+          </div>
+          <div id="scannet0011_00_view2" class="example" style="text-align:center">
+            <img src="images/comparison/0011_2.jpg" width="70%">
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<br>
+<br>
+<br>
+
+<!-- Contact -->
+<div class="container" style="width:70%">
+  <div class="row ">
+    <div class="col-12">
+      <h3><strong>Contact</strong></h3>
+      <hr style="margin-top:0px">
+      <p>Please feel free to contact <a href="https://yd-yin.github.io/">Yingda Yin</a> or <a href="https://github.com/Ly-kc">Yuzheng Liu</a>.
+      </p>
+      </pre>
+    </div>
+  </div>
+</div>
+
+<footer class="text-center" style="margin-bottom:10px; font-size: medium;">
+  <hr>
+  Thanks to <a href="https://lioryariv.github.io/" target="_blank">Lior Yariv</a> for the <a
+    href="https://lioryariv.github.io/idr/" target="_blank">website template</a>.
+</footer>
+
+<script src="js/script.js"></script>
+
+</body>
+</html>

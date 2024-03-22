@@ -1,0 +1,152 @@
+.tabs {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+.tab {
+flex-grow: 1; /*使每个标签平均分配可用空间*/
+text-align: center; /* 文字居中 */
+cursor: pointer;
+padding: 10px 20px;
+margin: 0 10px;
+background-color: #f0f0f0;
+border: 2px solid transparent;
+border-radius: 5px;
+transition: background-color 0.3s, border-color 0.3s;
+}
+
+.tab:hover {
+background-color: #e0e0e0;
+}
+
+.tab.active {
+background-color: #fff;
+border-color: #007bff;
+color: #007bff;
+}
+
+.thumbnails {
+  width: 90%;
+  overflow: hidden;
+  margin-top: 20px;
+  margin-bottom: 5px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.thumbnail-btn {
+  border: none;
+  cursor: pointer;
+  outline: none;
+  background-color: #fff;
+  padding-bottom: 8px;
+  border-radius: 10px;
+}
+
+.thumbnail-btn:hover   {
+  background-color: #eaeaea;
+}
+
+.active-btn   {
+  background-color: #d9e8ec;
+}
+
+.thumbnail-row {
+  display: flex;
+  overflow-x: scroll;
+  scroll-behavior: smooth;
+  width: 88%;
+  margin-left: auto;
+  margin-right: auto;
+  float: left;
+}
+
+.thumbnail-col {
+  width: 22%;
+  flex: 1 0 22%;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .2s;
+  transition: .2s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .2s;
+  transition: .2s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(36px);
+  -ms-transform: translateX(36px);
+  transform: translateX(36px);
+}
+
+.slide-arrow {
+  display: flex;
+  top: 0;
+  bottom: 0;
+  margin-top: 40px;
+  height: 4rem;
+  background-color: #6dbdff;
+  border: none;
+  width: 5%;
+  font-size: 2.5rem;
+  padding: 0;
+  cursor: pointer;
+  opacity: 1.0;
+  transition: color 100ms;
+  justify-content: center;
+}
+
+.slide-arrow:hover,
+.slide-arrow:focus {
+  background-color: #2196F3;
+  opacity: 1;
+}
+
+#slide-arrow-prev {
+  float: left;
+  left: 0;
+  margin-right: 1%;
+  border-radius: 2rem 2rem 2rem 2rem;
+}
+
+#slide-arrow-next {
+  float: right;
+  right: 0;
+  margin-left: 1%;
+  border-radius: 2rem 2rem 2rem 2rem;
+}
+
+#main-video {
+  width: 90%;
+  margin-top: 0px;
+  margin-bottom: 10px;
+  border-radius: 15px;
+}
