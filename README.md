@@ -124,7 +124,7 @@ data
 
    We modify the original ScanNet instance segmentation benchmark to conduct it. We collect all 18 classes(excluding wall and floor) of gt masks in ScanNet-v2 dataset as our gt class-agnostic masks, and the AP score is reported over all of the foreground masks. 
 
-   We provide processed gt class-agnostic masks [here(coming soon)](??). Please download and extract it into your `GT_DIR`
+   We provide processed gt class-agnostic masks [here](https://drive.google.com/file/d/1VwDtNTCzPEbQaK7xmG6KXzHvAicKDIc_/view?usp=sharing). Please download and extract it into your `GT_DIR`
 
    1. Prepare environment for ScanNet benchmark
       ```bash
@@ -190,7 +190,7 @@ data
 
    3. Assign semantic and evaluate
    
-      We provide processed gt masks for ScanNet200 semantic instance segmentation [here(coming soon)](??). 
+      We provide processed gt masks for ScanNet200 semantic instance segmentation [here](https://drive.google.com/file/d/1FYjzh6U8Em9BrKSw8f1OppgmeKtk1Ude/view?usp=sharing). 
 
       Now you can compute the per-mask scene features and run the evaluation of OpenMask3D on the whole ScanNet200 dataset.Set the required parameter in this [script](scripts/run_openmask3d_scannet200.sh) and run the following command:
       
