@@ -229,47 +229,18 @@ class ScanNet_SAI3D(SAI3DBase):
         # save_points_objnes_labels_to_mesh(save_path, scene_id)
 
 
-def get_splits(base_dir, scannetpp):
-    if scannetpp:
-        train_split_path = join(base_dir, 'splits/nvs_sem_train.txt')
-        val_split_path = join(base_dir, 'splits/nvs_sem_val.txt')
-    else:
-        train_split_path = join(
-            base_dir, 'Tasks/Benchmark/scannetv2_train.txt')
-        val_split_path = join(base_dir, 'Tasks/Benchmark/scannetv2_val.txt')
-
-    with open(train_split_path, 'r') as f:
-        train_split = f.readlines()
-    train_split = [s.strip() for s in train_split]
-
-    with open(val_split_path, 'r') as f:
-        val_split = f.readlines()
-    val_split = [s.strip() for s in val_split]
-
-    return train_split, val_split
-
-
-def get_points_from_ply(ply_path):
-    ply = plyfile.PlyData.read(ply_path)
-    xs = np.array(ply["vertex"].data['x'])[:, None]
-    ys = np.array(ply["vertex"].data['y'])[:, None]
-    zs = np.array(ply["vertex"].data['z'])[:, None]
-    points = np.concatenate((xs, ys, zs), axis=-1)
-    np.savetxt(join(dirname(ply_path), 'points.pts'), points)
-
-
 def everything_seg(args):
     time_collection = {}
     with CodeTimer('Load points', dict_collect=time_collection):
         if args.scannetpp:
             ply_path = join(args.base_dir, 'scans', args.scene_id, 'scans', 'mesh_aligned_0.05.ply')
         else:
-            ply_path = join(args.base_dir, 'scans', args.scene_id, 'scene0005_01_vh_clean_2.ply')
+            ply_path = join(args.base_dir, 'scans', args.scene_id, f'{args.scene_id}_vh_clean_2.ply')
         points_path = join(dirname(ply_path), 'points.pts')
 
         if not os.path.exists(points_path):
             print('getting points from ply...')
-            get_points_from_ply(ply_path)
+            utils.get_points_from_ply(ply_path)
 
         points = np.loadtxt(points_path).astype(np.float32)
         print('points num:', points.shape[0])
@@ -402,12 +373,12 @@ if __name__ == '__main__':
     parser.add_argument('--use_torch', action='store_true',
                         help='use torch version or numpy version')
     parser.add_argument('--scannetpp', default=False,
-                        action='store_true', help='use scannet++ dataset')
+                        action='store_true', help='use scannet++ dataset(not debug yet)')
     parser.add_argument('--eval_dir', type=str, help='where to save eval res')
 
     args = parser.parse_args()
 
-    train_split, val_split = get_splits(args.base_dir, args.scannetpp)
+    train_split, val_split = utils.get_splits(args.base_dir, args.scannetpp)
 
     seg_split = val_split
     # seg_split = val_split+train_split

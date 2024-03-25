@@ -64,8 +64,8 @@ wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth  #down
 ### Data Preparation
 
 #### ScanNet
-Download [ScanNetV2 / ScanNet200](https://github.com/ScanNet/ScanNet) and organize the dataset as follows: 
-
+Download [ScanNetV2 / ScanNet200](https://github.com/ScanNet/ScanNet) and organize the dataset as follows:
+ 
 ```
 data
  ├── ScanNet
@@ -141,6 +141,9 @@ data
       ```
 
    The numerical results will be saved under the directory of your predicitons by default.
+
+### Visualize class-agnostic results
+   Since the segmentation results in ScanNet evaluation format are tough to visualize, we provide functions in [helpers/visualize.py](helpers/visualize.py) to transform them into mesh(.ply) for visualization. Please check it to see the usage.
 
 ### Assign semantic with OpenMask3D and conduct 3D instance segmentation evaluation
    We prove that our proposed class-agnostic masks are more accurate and can be adopted in tasks like semantic instance segmentation. Here we choose OpenMask3D to assign semantic label for our class-agnostic masks.

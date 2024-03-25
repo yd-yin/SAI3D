@@ -9,6 +9,7 @@ import json
 import multiprocessing
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import plyfile
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -17,7 +18,32 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 general utils
 ================================================================================================
 """
+def get_points_from_ply(ply_path):
+    ply = plyfile.PlyData.read(ply_path)
+    xs = np.array(ply["vertex"].data['x'])[:, None]
+    ys = np.array(ply["vertex"].data['y'])[:, None]
+    zs = np.array(ply["vertex"].data['z'])[:, None]
+    points = np.concatenate((xs, ys, zs), axis=-1)
+    np.savetxt(join(dirname(ply_path), 'points.pts'), points)
 
+def get_splits(base_dir, scannetpp):
+    if scannetpp:
+        train_split_path = join(base_dir, 'splits/nvs_sem_train.txt')
+        val_split_path = join(base_dir, 'splits/nvs_sem_val.txt')
+    else:
+        train_split_path = join(
+            base_dir, 'Tasks/Benchmark/scannetv2_train.txt')
+        val_split_path = join(base_dir, 'Tasks/Benchmark/scannetv2_val.txt')
+
+    with open(train_split_path, 'r') as f:
+        train_split = f.readlines()
+    train_split = [s.strip() for s in train_split]
+
+    with open(val_split_path, 'r') as f:
+        val_split = f.readlines()
+    val_split = [s.strip() for s in val_split]
+
+    return train_split, val_split
 
 def construct_saving_name(args):
     save_name = \
