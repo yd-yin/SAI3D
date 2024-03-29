@@ -3,6 +3,7 @@ import tqdm
 import cv2
 import glob
 import argparse
+from natsort import natsorted
 from helpers.sam_utils import get_sam_by_iou, get_sam_by_area, num_to_natural, viz_mask, my_prepare_image
 from semantic_sam import build_semantic_sam, SemanticSamAutomaticMaskGenerator
 
@@ -27,12 +28,11 @@ def seg_scannet(base_dir, view_freq):
     os.makedirs(os.path.join(base_dir, '2D_masks'), exist_ok=True)
     for scene_id in tqdm.tqdm(seg_split):
         color_base = os.path.join(all_color_base, scene_id)
-        color_paths = sorted(glob.glob(os.path.join(color_base, '*.jpg')))
-        count = -1
+        color_paths = natsorted(glob.glob(os.path.join(color_base, '*.jpg')))
         for color_path in tqdm.tqdm(color_paths, desc=scene_id):
             color_name = os.path.basename(color_path)
-            count += 1
-            if (count % view_freq != 0):
+            num = int(color_name[-9:-4])
+            if num % view_freq != 0:
                 continue
             print(color_path)
             original_image, input_image = my_prepare_image(image_pth=color_path)

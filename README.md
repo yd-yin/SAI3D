@@ -140,7 +140,7 @@ data
       --gt_path=GT_DIR
       ```
 
-   The numerical results will be saved under the directory of your predicitons by default.
+   The numerical results will be saved under the directory of your predictions by default.
 
 ### Visualize class-agnostic results
    Since the segmentation results in ScanNet evaluation format are tough to visualize, we provide functions in [helpers/visualize.py](helpers/visualize.py) to transform them into mesh(.ply) for visualization. Please check it to see the usage.
@@ -152,14 +152,14 @@ data
 
       Since OpenMask3D requires ScanNet dataset to be organized like [this](https://github.com/OpenMask3D/openmask3d/blob/fb9b/README.md?plain=1#L148-L168), we provide a script to reorganize the dataset with softlink.  
       ```bash
-         python helpers/format_convertion.py              \
+         python helpers/format_convertion.py            \
          --app=0                                        \
          --base_dir=PATH_TO_PREVIOUS_SCANNET_DATASET    \
          --out_dir=PATH_TO_REORGANIZED_SCANNET_DATASET
       ```
       For example, 
       ```bash
-         python helpers/format_convertion.py              \
+         python helpers/format_convertion.py            \
          --app=0                                        \
          --base_dir="data/ScanNet"                      \
          --out_dir="data/ScanNet_OpenMask3D"
@@ -177,7 +177,7 @@ data
       However, OpenMask3D requires class-agnostic masks to be saved in a `.pt` format before assigning semantic for them. So please run the following command to convert the previous format of class-agnostic predictions into the input format required by OpenMask3D. 
 
       ```bash
-         python helpers/format_convertion.py    \ 
+         python helpers/format_convertion.py  \ 
          --app=1                              \   
          --base_dir=PATH_TO_PREDICTION_DIR    \
          --out_dir=PATH_TO_SAVE_PREDICTION_OF_NEW_FORMAT
@@ -185,7 +185,7 @@ data
       For example,
       ```bash
          RESULT_NAME="demo_scannet_5view_merge200_2-norm_semantic-sam_connect(0.9,0.5,5)_depth2"
-         python helpers/format_convertion.py                    \     
+         python helpers/format_convertion.py                  \     
          --app=1                                              \
          --base_dir="data/ScanNet/results/${RESULT_NAME}"     \
          --out_dir="data/class_agnostic_masks"
@@ -195,7 +195,7 @@ data
    
       We provide processed gt masks for ScanNet200 semantic instance segmentation [here](https://drive.google.com/file/d/1FYjzh6U8Em9BrKSw8f1OppgmeKtk1Ude/view?usp=sharing). 
 
-      Now you can compute the per-mask scene features and run the evaluation of OpenMask3D on the whole ScanNet200 dataset.Set the required parameter in this [script](scripts/run_openmask3d_scannet200.sh) and run the following command:
+      Now you can compute the per-mask scene features and run the evaluation of OpenMask3D on validation split of ScanNet200 dataset. Change the [intrinsic_resolution parameter in OpenMask3D configuration](https://github.com/OpenMask3D/openmask3d/blob/main/openmask3d/configs/openmask3d_scannet200_eval.yaml#L9) with the resolution of your `intrinsic_color.txt`. Then set the required parameter in this [script](scripts/run_openmask3d_scannet200.sh) and run the following command:
       
       ```bash
       bash scripts/run_openmask3d_scannet200.sh
